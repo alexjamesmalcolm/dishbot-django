@@ -8,7 +8,7 @@ from datetime import timedelta
 class House(models.Model):
     houses = models.Manager()
     name = models.CharField(max_length=128)
-    are_dishwashers_skipped = models.BooleanField()
+    do_fine_periods_loop = models.BooleanField()
 
     def __str__(self):
         return self.name
@@ -38,6 +38,8 @@ class Dishwasher(models.Model):
                 .exists()
             )
 
+        super(Dishwasher, self).save(*args, **kwargs)
+
         dishwashers = list(self.house.dishwashers.all())
         for dishwasher in dishwashers:
             if dishwasher.id is self.id:
@@ -50,8 +52,6 @@ class Dishwasher(models.Model):
                 self.order = num
 
         self.house.dishwashers.bulk_update(dishwashers, fields=["order"])
-
-        super(Dishwasher, self).save(*args, **kwargs)
 
     class Meta:
         constraints = [
@@ -75,8 +75,22 @@ class FinePeriod(models.Model):
     order = models.IntegerField()
     duration = models.DurationField(default=timedelta(days=1))
     fine_amount = models.DecimalField(max_digits=6, decimal_places=2)
+    is_current_fine_period = models.BooleanField()
 
     def save(self, *args, **kwargs):
+        if self.is_current_fine_period:
+            self.house.fine_periods.exclude(id=self.id).filter(
+                is_current_fine_period=True
+            ).update(is_current_fine_period=False)
+        else:
+            self.is_current_fine_period = (
+                not self.house.fine_periods.exclude(id=self.id)
+                .filter(is_current_fine_period=True)
+                .exists()
+            )
+
+        super(FinePeriod, self).save(*args, **kwargs)
+
         fine_periods = list(self.house.fine_periods.all())
         for fine_period in fine_periods:
             if fine_period.id is self.id:
@@ -90,12 +104,15 @@ class FinePeriod(models.Model):
 
         self.house.fine_periods.bulk_update(fine_periods, fields=["order"])
 
-        super(FinePeriod, self).save(*args, **kwargs)
-
     class Meta:
         constraints = [
             UniqueConstraint(
                 name="no two fines can have the same order per house",
                 fields=["house", "order"],
-            )
+            ),
+            UniqueConstraint(
+                name="only one fine period can be current per house",
+                fields=["house", "is_current_fine_period"],
+                condition=Q(is_current_fine_period=True),
+            ),
         ]
