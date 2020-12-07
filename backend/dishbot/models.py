@@ -1,11 +1,35 @@
 import operator
 from django.db import models
 from django.db.models import UniqueConstraint
+from django.db.models.manager import Manager
 from django.db.models.query_utils import Q
 from datetime import timedelta
+from utils import request_current_user
 
 
-class House(models.Model):
+class GroupMeUser(models.Model):
+    users = Manager()
+    name = models.CharField(max_length=64)
+    group_me_id = models.CharField(max_length=32)
+    token = models.CharField(max_length=32)
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def is_authenticated(self):
+        response = request_current_user(self.token)
+        return response["meta"]["code"] == 200
+
+
+class OwnedByGroupMeUser(models.Model):
+    owned_by = models.ForeignKey("GroupMeUser", on_delete=models.CASCADE)
+
+    class Meta:
+        abstract = True
+
+
+class House(OwnedByGroupMeUser):
     houses = models.Manager()
     name = models.CharField(max_length=128)
     do_fine_periods_loop = models.BooleanField()
@@ -14,7 +38,7 @@ class House(models.Model):
         return self.name
 
 
-class Dishwasher(models.Model):
+class Dishwasher(OwnedByGroupMeUser):
     dishwashers = models.Manager()
     name = models.CharField(max_length=64)
     order = models.IntegerField()
@@ -67,7 +91,7 @@ class Dishwasher(models.Model):
         ]
 
 
-class FinePeriod(models.Model):
+class FinePeriod(OwnedByGroupMeUser):
     fine_periods = models.Manager()
     house = models.ForeignKey(
         "House", on_delete=models.CASCADE, related_name="fine_periods"

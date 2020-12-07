@@ -22,4 +22,6 @@ router.register(r"house", views.HouseViewSet)
 router.register(r"fine-period", views.FinePeriodViewSet)
 router.register(r"dishwasher", views.DishwasherViewSet)
 
-urlpatterns = [path(r"api/", include(router.urls))]
+urlpatterns = [
+    path(r"api/", include(router.urls)),
+]
