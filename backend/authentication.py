@@ -25,7 +25,7 @@ class GroupMeAuthentication(authentication.BaseAuthentication):
                 user = GroupMeUser.users.create(
                     token=token_string,
                     name=current_user_data["name"],
-                    group_me_id=current_user_data["id"],
+                    group_me_id=group_me_id,
                 )
         if getattr(request.data, "owned_by", None):
             raise exceptions.AuthenticationFailed("Cannot change owner")
