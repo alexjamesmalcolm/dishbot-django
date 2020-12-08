@@ -31,6 +31,13 @@ class House(OwnedByGroupMeUser):
     def __str__(self):
         return self.name
 
+    class Meta:
+        constraints = [
+            UniqueConstraint(
+                name="unique house names per user", fields=["owned_by", "name"]
+            )
+        ]
+
 
 class Dishwasher(OwnedByGroupMeUser):
     dishwashers = models.Manager()
