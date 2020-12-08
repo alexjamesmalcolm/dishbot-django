@@ -11,8 +11,8 @@ from .abstract_models import OwnedByGroupMeUser, BaseModel
 class GroupMeUser(BaseModel):
     users = Manager()
     name = models.CharField(max_length=64)
-    group_me_id = models.CharField(max_length=32)
-    token = models.CharField(max_length=32)
+    group_me_id = models.CharField(max_length=32, unique=True)
+    token = models.CharField(max_length=32, unique=True)
 
     def __str__(self):
         return self.name
