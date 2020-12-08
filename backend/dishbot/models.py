@@ -5,9 +5,10 @@ from django.db.models.manager import Manager
 from django.db.models.query_utils import Q
 from datetime import timedelta
 from utils import request_current_user
+from .abstract_models import OwnedByGroupMeUser, BaseModel
 
 
-class GroupMeUser(models.Model):
+class GroupMeUser(BaseModel):
     users = Manager()
     name = models.CharField(max_length=64)
     group_me_id = models.CharField(max_length=32)
@@ -20,13 +21,6 @@ class GroupMeUser(models.Model):
     def is_authenticated(self):
         response = request_current_user(self.token)
         return response["meta"]["code"] == 200
-
-
-class OwnedByGroupMeUser(models.Model):
-    owned_by = models.ForeignKey("GroupMeUser", on_delete=models.CASCADE)
-
-    class Meta:
-        abstract = True
 
 
 class House(OwnedByGroupMeUser):
