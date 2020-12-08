@@ -10,9 +10,7 @@ class BaseModel(models.Model):
 
 
 class OwnedByGroupMeUser(BaseModel):
-    owned_by = models.ForeignKey(
-        "GroupMeUser", on_delete=models.CASCADE, editable=False
-    )
+    owned_by = models.ForeignKey("GroupMeUser", on_delete=models.CASCADE)
 
     class Meta:
         abstract = True
